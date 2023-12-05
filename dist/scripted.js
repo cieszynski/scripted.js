@@ -21,11 +21,11 @@
 
 class scripted {
 
-    constructor() { throw new Error('')}
+    constructor() { throw new Error('') }
 
     static play = async (by, from) => {
         console.assert(!isNaN(by));
-        
+
         document
             .getAnimations()
             .forEach((animation) => {
@@ -51,8 +51,13 @@ class scripted {
         const tweens = args.pop();
         const pseudoElement = args.pop();   // could be null
 
-        const options = { duration: 0, fill: 'both', pseudoElement: pseudoElement };
         const keyFrames = [];
+        const options = {
+            pseudoElement: pseudoElement,
+            endDelay: Number.MAX_VALUE,     // required for moving playhead randomly
+            fill: 'both',                   // required for moving playhead randomly 
+            duration: 0,
+        };
 
         Object
             .entries(tweens)
