@@ -21,28 +21,36 @@
 
 class scripted {
 
-    constructor() { throw new Error('') }
-
     static play = async (by, from) => {
         console.assert(!isNaN(by));
+
+        // helper to synchronize all animations
+        let currentTime = 0;
 
         document
             .getAnimations()
             .forEach((animation) => {
-                // seek
-                animation.currentTime = from ?? animation.currentTime;
+                // synchronize and seek
+                currentTime = animation.currentTime = from ?? animation.currentTime;
                 // direction, -1 or +1
                 animation.playbackRate = Math.sign(by);
                 animation.play();
             });
 
-        return Promise.resolve(document.body
-            .animate([], { duration: Math.abs(by) })
-            .finished.then((e) => {
-                document
-                    .getAnimations()
-                    .forEach((animation) => animation.pause());
-            }));
+        return Promise.resolve(
+            document.body
+                .animate([], { duration: Math.abs(by) })
+                .finished.then((e) => {
+                    // currentTime always >= 0
+                    currentTime += (currentTime + by > 0) ? by : -currentTime;
+                    document
+                        .getAnimations()
+                        .forEach((animation) => {
+                            animation.pause();
+                            animation.currentTime = currentTime;
+                        });
+                    return currentTime;
+                }));
     }
 
     static tween = (element, ...args) => {
@@ -51,13 +59,8 @@ class scripted {
         const tweens = args.pop();
         const pseudoElement = args.pop();   // could be null
 
+        const options = { duration: 0, fill: 'both', pseudoElement: pseudoElement, endDelay: Number.MAX_VALUE };
         const keyFrames = [];
-        const options = {
-            pseudoElement: pseudoElement,
-            endDelay: Number.MAX_VALUE,     // required for moving playhead randomly
-            fill: 'both',                   // required for moving playhead randomly 
-            duration: 0,
-        };
 
         Object
             .entries(tweens)
