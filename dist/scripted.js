@@ -59,7 +59,7 @@ class scripted {
         const tweens = args.pop();
         const pseudoElement = args.pop();   // could be null
 
-        const options = { duration: 0, fill: 'both', pseudoElement: pseudoElement, endDelay: Number.MAX_VALUE };
+        const options = { duration: 0, fill: 'both', pseudoElement: pseudoElement, endDelay: 86400000 };
         const keyFrames = [];
 
         Object
