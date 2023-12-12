@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>scripted.js test</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        div {
+            position: absolute;
+            opacity: 0;
+            width: 100px;
+            height: 100px;
+        }
+    </style>
+    <script src="scripted.js"></script>
+</head>
+
+<body>
+    <div id="redbox" style="background-color: red; top: 0; left: 0;">red</div>
+    <div id="bluebox" style="background-color: blue; top: 150px; left: 0; opacity: 1">blue</div>
+    <script>
+        const TWEEN_FADE_IN = {
+            0: {
+                opacity: 0,
+            },
+            1000: {
+                opacity: 1
+            }
+        }
+
+
+        const TWEEN_FADE_OUT = {
+            0: {
+                opacity: 1,
+            },
+            1000: {
+                opacity: 0
+            }
+        }
+
+        const a1 = scripted.tween(bluebox, {
+            150: {
+                rotate: '0deg'
+            }, 250: {
+                rotate: '90deg'
+            },
+            iterations: 5,
+            direction: 'alternate'
+        })
+
+        function fin(e) {
+            console.log(e)
+            e.onfinish = fin
+        }
+
+        a1.onfinish = fin
+
+        scripted.sequence(500,
+            "test1",
+            scripted.group(500,
+                scripted.tween(bluebox, {
+                    1000: {
+                        opacity: 0,
+                    },
+                    2000: {
+                        opacity: 1
+                    },
+                    6000: {
+                        opacity: 0
+                    }
+                }),
+                a1,
+            ),
+            "test2",
+            scripted.tween(redbox, {
+                0: {
+                    opacity: 0,
+                },
+                1000: {
+                    opacity: 1
+                },
+                3000: {
+                    opacity: 1
+                },
+                4000: {
+                    opacity: 0
+                }
+            })
+        );
+        
+        // scripted.play(5000).then((ms) => { console.log(ms); scripted.play(-5000, 5000).then((ms) => { console.log(ms); }) })
+
+        async function test() {
+           // await scripted.play(7000);
+            await scripted.play(3000, 0);
+            await scripted.play(3000, 3000);
+            await scripted.play(8000, 0);
+            await scripted.play(2000, 6000);
+            await scripted.play(2000, 'test2');
+           // await scripted.play(7000,0);
+        }
+
+        test()
+    </script>
+</body>
+
+</html>

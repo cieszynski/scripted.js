@@ -21,9 +21,11 @@
 
 class scripted {
 
-    static play = async (by, from) => {
-        console.assert(!isNaN(by));
+    static labels = {}
 
+    static play = async (by, from) => {
+        console.assert(!isNaN(by), '<by> has to be a number');
+        console.assert(0 <= ~~by, '<by> has to be a positive number');
         // helper to synchronize all animations
         let currentTime = 0;
 
@@ -31,9 +33,7 @@ class scripted {
             .getAnimations()
             .forEach((animation) => {
                 // synchronize and seek
-                currentTime = animation.currentTime = from ?? animation.currentTime;
-                // direction, -1 or +1
-                animation.playbackRate = Math.sign(by);
+                currentTime = animation.currentTime = scripted.labels?.[from] ?? from ?? animation.currentTime;
                 animation.play();
             });
 
@@ -41,12 +41,13 @@ class scripted {
             document.body
                 .animate([], { duration: Math.abs(by) })
                 .finished.then((e) => {
-                    // currentTime always >= 0
-                    currentTime += (currentTime + by > 0) ? by : -currentTime;
+                    // set currentTime to the exact value
+                    currentTime += by;
                     document
                         .getAnimations()
                         .forEach((animation) => {
                             animation.pause();
+                            // synchronize currentTime
                             animation.currentTime = currentTime;
                         });
                     return currentTime;
@@ -59,7 +60,7 @@ class scripted {
         const tweens = args.pop();
         const pseudoElement = args.pop();   // could be null
 
-        const options = { duration: 0, fill: 'both', pseudoElement: pseudoElement, endDelay: 86400000 };
+        const options = { duration: 0, pseudoElement: pseudoElement, fill: 'forwards' };
         const keyFrames = [];
 
         Object
@@ -120,7 +121,7 @@ class scripted {
 
     static sequence = (time, ...args) => {
         console.assert(!isNaN(time));
-        console.assert(args.every((arg) => ['Array', 'Animation'].includes(arg.constructor.name)));
+        console.assert(args.every((arg) => ['Array', 'Animation', 'String'].includes(arg.constructor.name)));
 
         const animations = []
 
@@ -137,12 +138,17 @@ class scripted {
                 });
 
                 time += duration;
-            } else {
-                const timing = arg.effect.getComputedTiming();
-                timing.delay += time;
-                time += timing.duration;
-                arg.effect.updateTiming(timing);
-                animations.push(arg);
+            } else switch (arg.constructor.name) {
+                case 'String':
+                    console.log(arg, time)
+                    scripted.labels[arg] = time;
+                    break;
+                default:
+                    const timing = arg.effect.getComputedTiming();
+                    timing.delay += time;
+                    time += timing.duration;
+                    arg.effect.updateTiming(timing);
+                    animations.push(arg);
             }
         }
 
